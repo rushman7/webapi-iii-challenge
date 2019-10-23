@@ -40,7 +40,7 @@ router.get('/:id', (req, res) => {
   userDB.getById(req.params.id)
     .then(user => {
       if (user) res.status(200).json(user)
-      else res.status(404).json({ message: "The user with the specified ID does not exist." })
+      else res.status(404).json({ error: "The user with the specified ID does not exist." })
     })
     .catch(() => res.status(500).json({ error: "The users information could not be retrieved." }))
 });
@@ -49,17 +49,31 @@ router.get('/:id/posts', (req, res) => {
   userDB.getUserPosts(req.params.id)
     .then(posts => {
       if (posts.length > 0) res.status(200).json(posts)
-      else res.status(404).json({ message: "The posts with the specified user ID does not exist." })
+      else res.status(404).json({ error: "The posts with the specified user ID does not exist." })
     })
     .catch(() => res.status(500).json({ error: "The posts information could not be retrieved." }))
 });
 
 router.delete('/:id', (req, res) => {
-
+  userDB.remove(req.params.id)
+    .then(user => {
+      if (user) res.status(202).json({ error: `The post with the ID ${req.params.id} has been removed.` })
+      else res.status(404).json({ error: "The post with the specified ID does not exist." })
+    })
+    .catch(() => res.status(500).json({ error: "The post could not be removed" }))
 });
 
 router.put('/:id', (req, res) => {
+  const { name } =  req.body;
 
+  if (!name) res.status(400).json({ error: "Please provide title and contents for the post." })
+  else 
+    userDB.update(req.params.id, req.body)
+      .then(post => {
+        if (post) res.status(200).json({ error: `The post with the ID ${req.params.id} has been updated.` })
+        else res.status(404).json({ error: "The post with the specified ID does not exist." })
+      })
+      .catch(() => res.status(500).json({ error: "The post information could not be modified." }))
 });
 
 //custom middleware
