@@ -36,17 +36,12 @@ router.get('/', (req, res) => {
     .catch(() => res.status(500).json({ error: "The users information could not be retrieved." }))
 });
 
-router.get('/:id', (req, res) => {
-  userDB.getById(req.params.id)
-    .then(user => {
-      if (user) res.status(200).json(user)
-      else res.status(404).json({ error: "The user with the specified ID does not exist." })
-    })
-    .catch(() => res.status(500).json({ error: "The users information could not be retrieved." }))
+router.get('/:id', validateUserId, (req, res) => {
+  res.status(200).json(req.user)
 });
 
-router.get('/:id/posts', (req, res) => {
-  userDB.getUserPosts(req.params.id)
+router.get('/:id/posts', validateUserId, (req, res) => {
+  userDB.getUserPosts(req.user.id)
     .then(posts => {
       if (posts.length > 0) res.status(200).json(posts)
       else res.status(404).json({ error: "The posts with the specified user ID does not exist." })
@@ -79,11 +74,19 @@ router.put('/:id', (req, res) => {
 //custom middleware
 
 function validateUserId(req, res, next) {
+  const id = req.params.id;
 
+  userDB.getById(id)
+    .then(user => {
+      if (user) {
+        req.user = user;
+        next();
+      } else res.status(404).json({ message: "invalid user id" })
+    })
+    .catch(() => res.status(500).json({ error: "The users information could not be retrieved." }))
 };
 
 function validateUser(req, res, next) {
-
 };
 
 function validatePost(req, res, next) {

@@ -1,30 +1,29 @@
 const express = require('express');
 const cors = require('cors');
-
-const server = express();
-server.use(express.json())
-server.use(cors());
-
 const userRouter = require('./users/userRouter');
 
-server.use('/api/users', userRouter);
+const server = express();
 
-server.get('/', (req, res) => {
-  res.send(`<h2>Let's write some middleware!</h2>`)
-});
+server.use(express.json())
+server.use(cors());
 
 //custom middleware
 
 function logger(req, res, next) {
   console.log(
-    `[${new Date().toISOString()}] 
-    ${req.method} to ${req.url} from ${req.get('Origin')}`
+    `[${new Date().toISOString()}] ${req.method} to ${req.url} from ${req.get('Origin')}`
   );
   next();
 };
 
 server.use(logger);
 
-server.listen(5000, () => console.log('Server is running on port 5000'))
+server.use((err, req, rest, next) => {
+  console.error(err);
 
-module.exports = server;
+  res.status(500).json({ message: 'There was an error performing the required operation', error: err })
+})
+
+server.use('/api/users', userRouter);
+
+server.listen(5000, () => console.log('Server is running on port 5000'));
