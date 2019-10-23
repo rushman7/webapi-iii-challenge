@@ -10,15 +10,10 @@ router.post('/', validateUser, (req, res) => {
     .catch(() => res.status(500).json({ error: "There was an error while saving the user to the database" }))
 });
 
-router.post('/:id/posts', (req, res) => {
-  const { user_id, text } = req.body;
-
-  if (!text) res.status(400).json({ error: "Please provide text for the post." })
-  else if (!user_id) res.status(404).json({ message: "The user with the specified ID does not exist." })
-  else 
-    postDB.insert(req.body)
-      .then(post => res.status(201).json(post))
-      .catch(() => res.status(500).json({ error: "There was an error while saving the post to the database" }))
+router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
+  postDB.insert(req.body)
+    .then(post => res.status(201).json(post))
+    .catch(() => res.status(500).json({ error: "There was an error while saving the post to the database" }))
 });
 
 router.get('/', (req, res) => {
@@ -87,7 +82,11 @@ function validateUser(req, res, next) {
 };
 
 function validatePost(req, res, next) {
+  const { text } = req.body;
 
+  if (!req.body) res.status(400).json({ message: "missing post data" })
+  else if (!text) res.status(404).json({ message: "missing required text field" })
+  else next();
 };
 
 module.exports = router;
