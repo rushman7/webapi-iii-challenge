@@ -15,8 +15,8 @@ router.get('/', (req, res) => {
     .catch(() => res.status(500).json({ error: "The posts information could not be retrieved." }))
 });
 
-router.get('/:id', (req, res) => {
-
+router.get('/:id', validatePostId, (req, res) => {
+  res.status(200).json(req.post)
 });
 
 router.delete('/:id', (req, res) => {
@@ -30,7 +30,16 @@ router.put('/:id', (req, res) => {
 // custom middleware
 
 function validatePostId(req, res, next) {
+  const id = req.params.id;
 
+  postDB.getById(id)
+    .then(post => {
+      if (post) {
+        req.post = post;
+        next();
+      } else res.status(404).json({ message: "invalid post id" })
+    })
+    .catch(() => res.status(500).json({ error: "The posts information could not be retrieved." }))
 };
 
 module.exports = router;
