@@ -19,12 +19,22 @@ router.get('/:id', validatePostId, (req, res) => {
   res.status(200).json(req.post)
 });
 
-router.delete('/:id', (req, res) => {
-
+router.delete('/:id', validatePostId, (req, res) => {
+  postDB.remove(req.post.id)
+    .then(post => {
+      if (post) res.status(202).json({ error: `The post with the ID ${req.post.id} has been removed.` })
+      else res.status(404).json({ error: "The post with the specified ID does not exist." })
+    })
+    .catch(() => res.status(500).json({ error: "The post could not be removed" }))
 });
 
-router.put('/:id', (req, res) => {
-
+router.put('/:id', validatePostId, (req, res) => {
+  postDB.update(req.post.id, req.body)
+    .then(post => {
+      if (post) res.status(200).json({ error: `The post with the ID ${req.post.id} has been updated.` })
+      else res.status(404).json({ error: "The post with the specified ID does not exist." })
+    })
+    .catch(() => res.status(500).json({ error: "The post information could not be modified." }))
 });
 
 // custom middleware
