@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const userRouter = require('./users/userRouter');
+const postRouter = require('./posts/postRouter');
 
 const server = express();
 
@@ -25,5 +26,6 @@ server.use((err, req, rest, next) => {
 })
 
 server.use('/api/users', userRouter);
+server.use('/api/posts', postRouter)
 
 server.listen(5000, () => console.log('Server is running on port 5000'));
