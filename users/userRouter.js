@@ -4,19 +4,15 @@ const postDB = require('../posts/postDb');
 
 const router = express.Router();
 
-router.post('/', (req, res) => {
-  const { name } = req.body;
-
-  if (!name) res.status(400).json({ error: "Please provide name for the user." })
-  else 
-    userDB.insert(req.body)
-      .then(user => res.status(201).json(user))
-      .catch(() => res.status(500).json({ error: "There was an error while saving the user to the database" }))
+router.post('/', validateUser, (req, res) => {
+  userDB.insert(req.body)
+    .then(user => res.status(201).json(user))
+    .catch(() => res.status(500).json({ error: "There was an error while saving the user to the database" }))
 });
 
 router.post('/:id/posts', (req, res) => {
   const { user_id, text } = req.body;
-  console.log(req.body)
+
   if (!text) res.status(400).json({ error: "Please provide text for the post." })
   else if (!user_id) res.status(404).json({ message: "The user with the specified ID does not exist." })
   else 
@@ -49,26 +45,22 @@ router.get('/:id/posts', validateUserId, (req, res) => {
     .catch(() => res.status(500).json({ error: "The posts information could not be retrieved." }))
 });
 
-router.delete('/:id', (req, res) => {
-  userDB.remove(req.params.id)
+router.delete('/:id', validateUserId, (req, res) => {
+  userDB.remove(req.user.id)
     .then(user => {
-      if (user) res.status(202).json({ error: `The post with the ID ${req.params.id} has been removed.` })
-      else res.status(404).json({ error: "The post with the specified ID does not exist." })
+      if (user) res.status(202).json({ error: `The user with the ID ${req.user.id} has been removed.` })
+      else res.status(404).json({ error: "The user with the specified ID does not exist." })
     })
-    .catch(() => res.status(500).json({ error: "The post could not be removed" }))
+    .catch(() => res.status(500).json({ error: "The user could not be removed" }))
 });
 
-router.put('/:id', (req, res) => {
-  const { name } =  req.body;
-
-  if (!name) res.status(400).json({ error: "Please provide title and contents for the post." })
-  else 
-    userDB.update(req.params.id, req.body)
-      .then(post => {
-        if (post) res.status(200).json({ error: `The post with the ID ${req.params.id} has been updated.` })
-        else res.status(404).json({ error: "The post with the specified ID does not exist." })
-      })
-      .catch(() => res.status(500).json({ error: "The post information could not be modified." }))
+router.put('/:id', validateUserId, validateUser, (req, res) => {
+  userDB.update(req.user.id, req.body)
+    .then(user => {
+      if (user) res.status(200).json({ error: `The user with the ID ${req.user.id} has been updated.` })
+      else res.status(404).json({ error: "The user with the specified ID does not exist." })
+    })
+    .catch(() => res.status(500).json({ error: "The user information could not be modified." }))
 });
 
 //custom middleware
@@ -87,6 +79,11 @@ function validateUserId(req, res, next) {
 };
 
 function validateUser(req, res, next) {
+  const { name } = req.body;
+
+  if (!req.body) res.status(400).json({ message: "missing user data" })
+  else if (!name) res.status(400).json({ message: "missing required name field" })
+  else next();
 };
 
 function validatePost(req, res, next) {
